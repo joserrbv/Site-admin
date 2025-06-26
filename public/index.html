@@ -33,7 +33,7 @@
     <div id="services"></div>
   </div>
 
-<script>
+<!-- <script>
   let token = ''
 
   function login() {
@@ -102,6 +102,109 @@
     })
     .then(() => fetchServices())
   }
+</script> -->
+ 
+<script>
+  let token = ''
+  let editingServiceId = null // <- para saber se está editando
+
+  function login() {
+    const email = document.getElementById('adminEmail').value
+    const password = document.getElementById('adminPass').value
+
+    fetch('https://site-admin-o87f.onrender.com/api/admin/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.token) {
+        token = data.token
+        document.getElementById('login').style.display = 'none'
+        document.getElementById('adminPanel').style.display = 'block'
+        fetchServices()
+      } else {
+        alert('Login inválido')
+      }
+    })
+  }
+
+  document.getElementById('serviceForm').addEventListener('submit', function(e) {
+    e.preventDefault()
+
+    const formData = new FormData()
+    formData.append('title', document.getElementById('title').value)
+    formData.append('description', document.getElementById('description').value)
+    const imageFile = document.getElementById('image').files[0]
+    if (imageFile) {
+      formData.append('image', imageFile)
+    }
+
+    if (editingServiceId) {
+      // Editar
+      fetch(`https://site-admin-o87f.onrender.com/api/services/${editingServiceId}`, {
+        method: 'PUT',
+        body: formData
+      })
+      .then(res => res.json())
+      .then(() => {
+        editingServiceId = null
+        document.getElementById('serviceForm').reset()
+        fetchServices()
+      })
+    } else {
+      // Criar
+      fetch('https://site-admin-o87f.onrender.com/api/services', {
+        method: 'POST',
+        body: formData
+      })
+      .then(res => res.json())
+      .then(() => {
+        document.getElementById('serviceForm').reset()
+        fetchServices()
+      })
+    }
+  })
+
+  function fetchServices() {
+    fetch('https://site-admin-o87f.onrender.com/api/services')
+      .then(res => res.json())
+      .then(data => {
+        const container = document.getElementById('services')
+        container.innerHTML = ''
+        data.forEach(service => {
+          const div = document.createElement('div')
+          div.className = 'service'
+          div.innerHTML = `
+            <h3>${service.title}</h3>
+            <p>${service.description}</p>
+            <img src="https://site-admin-o87f.onrender.com/uploads/${service.image}" alt="${service.title}">
+            <button onclick="editService('${service._id}', '${service.title}', \`${service.description.replace(/`/g, '\\`')}\`)">Editar</button>
+            <button onclick="deleteService('${service._id}')">Excluir</button>
+          `
+          container.appendChild(div)
+        })
+      })
+  }
+
+  function deleteService(id) {
+    fetch(`https://site-admin-o87f.onrender.com/api/services/${id}`, {
+      method: 'DELETE'
+    })
+    .then(() => fetchServices())
+  }
+
+  function editService(id, title, description) {
+    editingServiceId = id
+    document.getElementById('title').value = title
+    document.getElementById('description').value = description
+    document.getElementById('image').value = '' // imagem precisa ser reenviada se desejada
+    window.scrollTo(0, 0) // sobe a tela pro formulário
+  }
 </script>
+
+
+
 </body>
 </html>
