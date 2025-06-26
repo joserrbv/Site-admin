@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Painel Admin - Zenatech</title>
+  <style>
+    body { font-family: sans-serif; margin: 20px; }
+    input, textarea, button { margin: 5px 0; display: block; width: 100%; }
+    img { max-width: 200px; display: block; margin-top: 5px; }
+    .service { border: 1px solid #ccc; padding: 10px; margin: 10px 0; }
+  </style>
+</head>
+<body>
+  <h1>Painel Administrativo</h1>
+  <div id="login">
+    <h2>Login</h2>
+    <input type="email" id="adminEmail" placeholder="Email">
+    <input type="password" id="adminPass" placeholder="Senha">
+    <button onclick="login()">Entrar</button>
+  </div>
+
+  <div id="adminPanel" style="display:none">
+    <h2>Cadastrar Serviço</h2>
+    <form id="serviceForm">
+      <input type="text" id="title" placeholder="Título" required>
+      <textarea id="description" placeholder="Descrição" required></textarea>
+      <input type="file" id="image" accept="image/*" required>
+      <button type="submit">Salvar</button>
+    </form>
+
+    <h2>Serviços Cadastrados</h2>
+    <div id="services"></div>
+  </div>
+
+<script>
+  let token = ''
+
+  function login() {
+    const email = document.getElementById('adminEmail').value
+    const password = document.getElementById('adminPass').value
+
+    fetch('http://localhost:5000/api/admin/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.token) {
+        token = data.token
+        document.getElementById('login').style.display = 'none'
+        document.getElementById('adminPanel').style.display = 'block'
+        fetchServices()
+      } else {
+        alert('Login inválido')
+      }
+    })
+  }
+
+  document.getElementById('serviceForm').addEventListener('submit', function(e) {
+    e.preventDefault()
+    const formData = new FormData()
+    formData.append('title', document.getElementById('title').value)
+    formData.append('description', document.getElementById('description').value)
+    formData.append('image', document.getElementById('image').files[0])
+
+    fetch('http://localhost:5000/api/services', {
+      method: 'POST',
+      body: formData
+    })
+    .then(res => res.json())
+    .then(() => {
+      fetchServices()
+      document.getElementById('serviceForm').reset()
+    })
+  })
+
+  function fetchServices() {
+    fetch('http://localhost:5000/api/services')
+      .then(res => res.json())
+      .then(data => {
+        const container = document.getElementById('services')
+        container.innerHTML = ''
+        data.forEach(service => {
+          const div = document.createElement('div')
+          div.className = 'service'
+          div.innerHTML = `
+            <h3>${service.title}</h3>
+            <p>${service.description}</p>
+            <img src="http://localhost:5000/uploads/${service.image}" alt="${service.title}">
+            <button onclick="deleteService('${service._id}')">Excluir</button>
+          `
+          container.appendChild(div)
+        })
+      })
+  }
+
+  function deleteService(id) {
+    fetch(`http://localhost:5000/api/services/${id}`, {
+      method: 'DELETE'
+    })
+    .then(() => fetchServices())
+  }
+</script>
+</body>
+</html>
