@@ -16,6 +16,8 @@ app.use(cors());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+// Servir painel admin
+app.use('/admin', express.static(path.join(__dirname, 'public')));
 const fs = require('fs');
 
 app.use('/api/contact', contactRoutes);
