@@ -40,7 +40,7 @@
     const email = document.getElementById('adminEmail').value
     const password = document.getElementById('adminPass').value
 
-    fetch('https://site-admin-o87f.onrender.com/api/admin/login', {
+    fetch('http://localhost:5000/api/admin/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password })
@@ -65,7 +65,7 @@
     formData.append('description', document.getElementById('description').value)
     formData.append('image', document.getElementById('image').files[0])
 
-    fetch('https://site-admin-o87f.onrender.com/api/services', {
+    fetch('http://localhost:5000/api/services', {
       method: 'POST',
       body: formData
     })
@@ -77,7 +77,7 @@
   })
 
   function fetchServices() {
-    fetch('https://site-admin-o87f.onrender.com/api/services')
+    fetch('http://localhost:5000/api/services')
       .then(res => res.json())
       .then(data => {
         const container = document.getElementById('services')
@@ -88,7 +88,7 @@
           div.innerHTML = `
             <h3>${service.title}</h3>
             <p>${service.description}</p>
-            <img src="https://site-admin-o87f.onrender.com/uploads/${service.image}" alt="${service.title}">
+            <img src="http://localhost:5000/uploads/${service.image}" alt="${service.title}">
             <button onclick="deleteService('${service._id}')">Excluir</button>
           `
           container.appendChild(div)
@@ -97,7 +97,7 @@
   }
 
   function deleteService(id) {
-    fetch(`https://site-admin-o87f.onrender.com/api/services/${id}`, {
+    fetch(`http://localhost:5000/api/services/${id}`, {
       method: 'DELETE'
     })
     .then(() => fetchServices())
